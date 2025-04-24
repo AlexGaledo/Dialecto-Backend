@@ -1,0 +1,4 @@
+torch
+transformers
+deep-translator
+speechrecognition
