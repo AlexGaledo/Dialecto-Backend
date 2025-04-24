@@ -1,5 +1,9 @@
 torch
 transformers
 deep-translator
-speechrecognition
+SpeechRecognition
 gunicorn
+flask
+flask-cors
+python-dotenv
+requests
