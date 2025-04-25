@@ -58,23 +58,10 @@ def microphone():
 @app.route("/chatbot", methods=["POST"])
 def chatbot():
     user_input = request.get_json().get("text", "")
-    direction = "ceb_to_eng"
-
-    try:
-        translated_text = nllb_model(user_input, direction)
-    except Exception as e:
-        print("Translation Error:", e)
-        return jsonify({"error": "Translation failed"}), 500
-
-    try:
-        chatbot_response = get_chatbot_response(translated_text)
-    except Exception as e:
-        print("Chatbot API Error:", e)
-        return jsonify({"error": "Chatbot request failed"}), 500
-    user_input = request.get_json().get("text", "")
+    
     return jsonify({
-        "translated_text": translated_text,
-        "chatbot_response(echo)": {user_input};
+        "translated_text": "debug",
+        "chatbot_response(echo)": {user_input}
     })
 
 def get_chatbot_response(text):
