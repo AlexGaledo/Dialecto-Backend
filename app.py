@@ -61,8 +61,9 @@ def chatbot():
     
     return jsonify({
         "translated_text": "debug",
-        "chatbot_response(echo)": user_input
+        "chatbot_response_echo": user_input  # Changed the key name
     })
+
 
 def get_chatbot_response(text):
     url = "https://api.mistral.ai/v1/chat/completions"
