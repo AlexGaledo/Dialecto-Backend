@@ -5,6 +5,7 @@ import speech_recognition as sr
 import requests
 from dotenv import load_dotenv
 from flask_cors import CORS
+import logging
 
 app = Flask(__name__)
 CORS(app)
@@ -32,11 +33,15 @@ def load_translation_model():
         translator_pipe = pipeline("translation", model=model, tokenizer=tokenizer)
 
 def nllb_model(text, direction):
-    load_translation_model()
-    src_lang = dictionary["ceb"] if direction == "ceb_to_eng" else dictionary["eng"]
-    tgt_lang = dictionary["eng"] if direction == "ceb_to_eng" else dictionary["ceb"]
-    translated_text = translator_pipe(text, src_lang=src_lang, tgt_lang=tgt_lang, max_length=400)
-    return translated_text[0]['translation_text']
+    try:
+        load_translation_model()
+        src_lang = dictionary["ceb"] if direction == "ceb_to_eng" else dictionary["eng"]
+        tgt_lang = dictionary["eng"] if direction == "ceb_to_eng" else dictionary["ceb"]
+        translated_text = translator_pipe(text, src_lang=src_lang, tgt_lang=tgt_lang, max_length=400)
+        return translated_text[0]['translation_text']
+    except Exception as e:
+        logging.error(f"Translation Error: {e}", exc_info=True)
+        return "Translation failed"
 
 def get_audio_input():
     recognizer = sr.Recognizer()
@@ -86,15 +91,25 @@ def get_chatbot_response(text):
         "messages": [{"role": "user", "content": text}]
     }
 
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    response_json = response.json()
-    return response_json.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        response_json = response.json()
+        return response_json.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Chatbot API Error: {e}", exc_info=True)
+        return "Chatbot request failed"
+
 
 @app.route("/")
 def home():
     return "Dialecto API is live."
 
+def init_models():
+    load_translation_model()
+    print("Models initialized successfully.")
+
 if __name__ == "__main__":
+    init_models()
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
