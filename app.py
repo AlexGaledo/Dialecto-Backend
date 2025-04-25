@@ -117,5 +117,4 @@ def get_chatbot_response(text):
 
 
 
-if __name__ == "__main__":
-    app.run()
+
