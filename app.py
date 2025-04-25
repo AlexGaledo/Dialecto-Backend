@@ -71,10 +71,10 @@ def chatbot():
     except Exception as e:
         print("Chatbot API Error:", e)
         return jsonify({"error": "Chatbot request failed"}), 500
-
+    user_input = request.get_json().get("text", "")
     return jsonify({
         "translated_text": translated_text,
-        "chatbot_response": chatbot_response
+        "chatbot_response(echo)": {user_input};
     })
 
 def get_chatbot_response(text):
