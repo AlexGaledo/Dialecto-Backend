@@ -24,14 +24,6 @@ dictionary = {
     'ceb': "ceb_Latn"
 }
 
-def load_translation_model():
-    global tokenizer, model, translator_pipe
-    if translator_pipe is None:
-        model_name = "Splintir/Nllb_dialecto"
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-        translator_pipe = pipeline("translation", model=model, tokenizer=tokenizer)
-
 def nllb_model(text, direction):
     try:
         load_translation_model()
@@ -43,22 +35,29 @@ def nllb_model(text, direction):
         logging.error(f"Translation Error: {e}", exc_info=True)
         return "Translation failed"
 
-def get_audio_input():
-    recognizer = sr.Recognizer()
-    with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
-    try:
-        return recognizer.recognize_google(audio)
-    except sr.UnknownValueError:
-        return "Could not understand audio"
-    except sr.RequestError:
-        return "Could not request results"
 
-@app.route("/microphone", methods=["POST"])
-def microphone():
-    text = get_audio_input()
-    return jsonify({"text": text})
+def load_translation_model():
+    global tokenizer, model, translator_pipe
+    if translator_pipe is None:
+        model_name = "Splintir/Nllb_dialecto"
+        
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        
+        from transformers import BitsAndBytesConfig
+        bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name,
+            quantization_config=bnb_config,
+            device_map="auto"  # optional
+        )
+
+        translator_pipe = pipeline(
+            "translation", 
+            model=model, 
+            tokenizer=tokenizer,
+            device=0  # if using GPU, or device=-1 for CPU
+        )
 
 @app.route("/chatbot", methods=["POST"])
 def chatbot():
